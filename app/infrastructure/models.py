@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from sqlalchemy import Boolean, DateTime, String, Enum
 from sqlalchemy.orm import Mapped, mapped_column
-from app.data.database import Base
+from app.infrastructure.database import Base
 from app.domain.entities import MAX_TITLE_LENGTH, Priority
 
 

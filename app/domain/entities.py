@@ -6,12 +6,6 @@ from datetime import datetime
 
 MAX_TITLE_LENGTH = 500
 
-@dataclass
-class TodoEditData:
-    title: str
-    priority: Priority
-    deadline: datetime | None = None
-
 class Priority(Enum):
     LOW = "Низкий"
     MEDIUM = "Средний"

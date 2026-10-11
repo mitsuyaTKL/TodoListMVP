@@ -1,7 +1,10 @@
 from __future__ import annotations
-from app.domain.entities import Priority, TodoItem, TodoEditData
+from app.domain.entities import Priority, TodoItem
+from app.domain.exceptions import TodoNotFoundError
 from app.domain.repositories import ITodoRepository
+from datetime import datetime
 
+PRIORITY_ORDER = {p.value: i for i, p in enumerate(Priority)}
 
 class TodoService:
     def __init__(self, repository: ITodoRepository) -> None:
@@ -20,6 +23,25 @@ class TodoService:
         self._find_by_id(todo_id)
         self._repository.delete(todo_id)
 
+    def get_todos(
+        self,
+        *,
+        filter_mode: str = "all",
+        sort: str = "created_at",
+    ) -> list[TodoItem]:
+        items = self._repository.get_all()
+
+        if filter_mode == "active":
+            items = [i for i in items if not i.is_completed]
+        elif filter_mode == "completed":
+            items = [i for i in items if i.is_completed]
+
+        reverse = sort.startswith("-")
+        field = sort.lstrip("-")
+        items = self._sort_items(items, field, reverse)
+
+        return items
+
     def get_all_todos(self) -> list[TodoItem]:
         return self._repository.get_all()
 
@@ -29,12 +51,19 @@ class TodoService:
     def edit_todo(
         self,
         todo_id: int,
-        data: TodoEditData,
+        *,
+        title: str | None = None,
+        priority: Priority | None = None,
+        deadline: datetime | None = None,
+        update_deadline: bool = False,
     ) -> TodoItem:
         item = self._find_by_id(todo_id)
-        item.change_title(data.title)
-        item.change_priority(data.priority)
-        item.change_deadline(data.deadline)
+        if title is not None:
+            item.change_title(title)
+        if priority is not None:
+            item.change_priority(priority)
+        if update_deadline:
+            item.change_deadline(deadline)
         self._repository.update(item)
         return item
 
@@ -53,4 +82,15 @@ class TodoService:
         for item in self._repository.get_all():
             if item.id == todo_id:
                 return item
-        raise ValueError(f"Задача с id = {todo_id} не найдена")
+        raise TodoNotFoundError(f"Задача с id = {todo_id} не найдена")
+
+    @staticmethod
+    def _sort_items(items: list[TodoItem], field: str, reverse: bool) -> list[TodoItem]:
+        extractors = {
+            "created_at": lambda i: i.created_at,
+            "title": lambda i: i.title.lower(),
+            "priority": lambda i: PRIORITY_ORDER[i.priority.value],
+            "deadline": lambda i: (i.deadline is None, i.deadline or datetime.max),
+        }
+        key = extractors.get(field, extractors["created_at"])
+        return sorted(items, key=key, reverse=reverse)
