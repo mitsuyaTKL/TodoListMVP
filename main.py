@@ -1,7 +1,10 @@
 import logging
 
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, Request
 
+from app.infrastructure.database import engine, init_db
 from app.api.routes import router as system_router
 from app.api.routes_tasks import router as tasks_router
 from app.api import dependencies
@@ -18,9 +21,19 @@ logging.basicConfig(
 logger = logging.getLogger("todo")
 
 #Приложение
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await init_db()
+    logger.info("База данных инициализирована")
+    yield
+
+    await engine.dispose()
+    logger.info("Соединения с базой данных освобождены")
+
 app = FastAPI(
-    title="Todo List by Mitsuya on REST API",
-    description="RESTful API приложение для отслеживания/управления персональными задачами",
+    title="Todo List by Mitsuya on Async REST API",
+    description="Асинхронный RESTful API приложение для отслеживания/управления персональными задачами",
+    lifespan=lifespan
 )
 
 #Middleware для логирования запросов

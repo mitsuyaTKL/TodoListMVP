@@ -13,12 +13,12 @@ router = APIRouter(prefix="/api/tasks", tags=["tasks"])
     response_model=list[TodoResponseSchema],
     summary="Получить список задач",
 )
-def get_tasks(
+async def get_tasks(
         filter_mode: TaskFilter = Query(TaskFilter.ALL, alias="filter", description="Фильтр: all | active | completed"),
         sort: TaskSort = Query(TaskSort.CREATED_AT_ASC, description="Сортировка по столбцам. Префикс *-* означает обратный порядок"),
         service: TodoService = Depends(get_service)
 ) -> list[TodoResponseSchema]:
-    items = service.get_todos(
+    items = await service.get_todos(
         filter_mode=filter_mode.value,
         sort=sort.value,
     )
@@ -29,11 +29,11 @@ def get_tasks(
     response_model=TodoResponseSchema,
     summary="Получить задачу по ID"
 )
-def get_task_by_id(
+async def get_task_by_id(
     task_id: int = Path(..., ge=1, description="ID задачи"),
     service: TodoService = Depends(get_service)
 ) -> TodoResponseSchema:
-    item = service.get_todo(task_id)
+    item = await service.get_todo(task_id)
     return TodoResponseSchema.model_validate(item)
 
 @router.post(
@@ -42,11 +42,11 @@ def get_task_by_id(
     status_code=status.HTTP_201_CREATED,
     summary="Создать новую задачу"
 )
-def create_task(
+async def create_task(
     payload: TodoCreateSchema,
     service: TodoService = Depends(get_service)
 ) -> TodoResponseSchema:
-    item = service.create_todo(
+    item = await service.create_todo(
         title=payload.title,
         priority=payload.priority,
         deadline=payload.deadline,
@@ -58,13 +58,13 @@ def create_task(
     response_model=TodoResponseSchema,
     summary="Редактировать задачу по ID"
 )
-def patch_task(
+async def patch_task(
     payload: TodoUpdateSchema,
     task_id: int = Path(..., ge=1, description="ID задачи"),
     service: TodoService = Depends(get_service)
 ) -> TodoResponseSchema:
     data = payload.model_dump(exclude_unset=True)
-    item = service.edit_todo(
+    item = await service.edit_todo(
         task_id,
         title=data.get("title"),
         priority=data.get("priority"),
@@ -78,11 +78,11 @@ def patch_task(
     response_model=TodoResponseSchema,
     summary="Переключить статус задачи",
 )
-def toggle_task(
+async def toggle_task(
     task_id: int = Path(..., ge=1, description="ID задачи"),
     service: TodoService = Depends(get_service),
 ) -> TodoResponseSchema:
-    item = service.toggle_completed(task_id)
+    item = await service.toggle_completed(task_id)
     return TodoResponseSchema.model_validate(item)
 
 @router.delete(
@@ -90,11 +90,11 @@ def toggle_task(
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Удалить задачу по ID"
 )
-def delete_task_by_id(
+async def delete_task_by_id(
     task_id: int = Path(..., ge=1, description="ID задачи"),
     service: TodoService = Depends(get_service)
 ) -> Response:
-    service.delete_todo(task_id)
+    await service.delete_todo(task_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 @router.delete(
@@ -102,8 +102,8 @@ def delete_task_by_id(
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Удалить все завершённые задачи",
 )
-def clear_completed_tasks(
+async def clear_completed_tasks(
     service: TodoService = Depends(get_service),
 ) -> Response:
-    service.clear_completed()
+    await service.clear_completed()
     return Response(status_code=status.HTTP_204_NO_CONTENT)

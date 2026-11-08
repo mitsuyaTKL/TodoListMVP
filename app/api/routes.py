@@ -1,13 +1,15 @@
 from fastapi import APIRouter
+import asyncio
 
 router = APIRouter()
 
 @router.get("/health", tags=["system"])
-def health_check() -> dict:
+async def health_check() -> dict:
+    #await asyncio.sleep(5)
     return {"status": "ok"}
 
 @router.get("/", tags=["system"])
-def root() -> dict:
+async def root() -> dict:
     return {
         "service": "Todo List by Mitsuya",
         "docs": "/docs",
