@@ -1,9 +1,13 @@
 import logging
 
+from fastapi.middleware.cors import CORSMiddleware
+
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
+from starlette.staticfiles import StaticFiles
 
+from app.config import settings
 from app.infrastructure.database import engine, init_db
 from app.api.routes import router as system_router
 from app.api.routes_tasks import router as tasks_router
@@ -12,7 +16,7 @@ from app.api.exceptions import domain_value_error_handler, not_found_error_handl
 from app.domain.exceptions import TodoNotFoundError
 
 
-#Логирование
+# Логирование
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
@@ -20,23 +24,33 @@ logging.basicConfig(
 )
 logger = logging.getLogger("todo")
 
-#Приложение
+# Приложение
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(_app: FastAPI):
     await init_db()
-    logger.info("База данных инициализирована")
+    logger.info(f"База данных инициализирована")
     yield
 
     await engine.dispose()
     logger.info("Соединения с базой данных освобождены")
 
 app = FastAPI(
-    title="Todo List by Mitsuya on Async REST API",
+    title=settings.PROJECT_NAME,
     description="Асинхронный RESTful API приложение для отслеживания/управления персональными задачами",
+    version=settings.VERSION,
     lifespan=lifespan
 )
 
-#Middleware для логирования запросов
+# CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.ALLOWED_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
+
+# Middleware для логирования запросов
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     logger.info("→ %s %s", request.method, request.url.path)
@@ -49,10 +63,13 @@ async def log_requests(request: Request, call_next):
     )
     return response
 
-#Обработчик исключений
+# Обработчик исключений
 app.add_exception_handler(TodoNotFoundError, not_found_error_handler)
 app.add_exception_handler(ValueError, domain_value_error_handler)
 
-#Подключаем роутеры
+# Подключаем роуты
 app.include_router(system_router)
 app.include_router(tasks_router)
+
+# Статика
+app.mount("/", StaticFiles(directory="plain-client", html=True), name="static")

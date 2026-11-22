@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
+from app.config import settings
 
 
 class Base(DeclarativeBase):
@@ -9,7 +10,7 @@ class Base(DeclarativeBase):
 
 DATABASE_URL = "sqlite+aiosqlite:///todo.sqlite3"
 
-engine: AsyncEngine = create_async_engine(DATABASE_URL, echo=False)
+engine: AsyncEngine = create_async_engine(settings.DATABASE_URL, echo=False)
 
 async_session_maker = async_sessionmaker(
     bind=engine,

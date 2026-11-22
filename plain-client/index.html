@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport">
+    <title>TODO List by Mitsuya</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="app-header">
+        <div class="header-content">
+            <h1 class="page-title">Список задач</h1>
+            <div class="header-actions">
+                <span id="task-count" class="task-count">0</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="app-main">
+        <div class="workspace-container">
+
+            <!-- Панель фильтров и массовых действий -->
+            <div class="toolbar">
+                <div class="filter-group">
+                    <button class="filter-btn active" data-filter="all">Все</button>
+                    <button class="filter-btn" data-filter="active">Активные</button>
+                    <button class="filter-btn" data-filter="completed">Завершенные</button>
+                </div>
+                <button id="clear-completed" class="btn-delete">Очистить завершенные</button>
+            </div>
+
+            <!-- Заголовки таблицы -->
+            <div class="table-header">
+                <div class="col-check"></div>
+                <div class="col-title sortable" data-sort="title">
+                    Задача <span class="sort-icon">↕</span>
+                </div>
+                <div class="col-priority sortable" data-sort="priority">
+                    Приоритет <span class="sort-icon">↕</span>
+                </div>
+                <div class="col-date sortable" data-sort="created_at">
+                    Создана <span class="sort-icon">↕</span>
+                </div>
+                <div class="col-date sortable" data-sort="deadline">
+                    Дедлайн <span class="sort-icon">↕</span>
+                </div>
+                <div class="col-actions"></div>
+            </div>
+
+            <div id="task-list" class="task-list">
+                <!-- Сюда JS вставляет строки -->
+            </div>
+
+        </div>
+    </main>
+
+    <button id="fab-add" class="fab" title="Добавить задачу">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+    </button>
+
+    <div id="task-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Новая задача</h2>
+                <button id="close-modal" class="btn-close">&times;</button>
+            </div>
+            <form id="task-form" class="task-form">
+                <div class="input-group">
+                    <label>Название</label>
+                    <input id="task-title" type="text" maxlength="200" placeholder="Что нужно сделать?" required>
+                </div>
+
+                <div class="input-row">
+                    <div class="input-group">
+                        <label>Приоритет</label>
+                        <select id="task-priority">
+                            <option value="Низкий">Низкий</option>
+                            <option value="Средний" selected>Средний</option>
+                            <option value="Высокий">Высокий</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>Дедлайн</label>
+                        <input id="task-deadline" type="datetime-local" min="2000-01-01T00:00" max="9999-12-31T23:59">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-primary">Создать</button>
+            </form>
+        </div>
+    </div>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>
