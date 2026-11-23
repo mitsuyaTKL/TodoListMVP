@@ -8,7 +8,6 @@ from app.config import settings
 class Base(DeclarativeBase):
     pass
 
-DATABASE_URL = "sqlite+aiosqlite:///todo.sqlite3"
 
 engine: AsyncEngine = create_async_engine(settings.DATABASE_URL, echo=False)
 
